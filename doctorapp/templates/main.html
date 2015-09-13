@@ -1,0 +1,101 @@
+{% load bootstrap3 %}
+<html>
+<head>
+{{form.media}}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+<style type="text/css">
+#time_group span {
+display:none;
+cursor:pointer;
+}
+#alertd {
+display:none;
+}
+</style>
+<title>Наше тестовое приложение</title>
+</head>
+
+{% bootstrap_messages %}
+
+<body>
+<form action="/" method="post" class="form">
+  {% csrf_token %}
+  {% bootstrap_form form %}
+  <div class="form-group" id="time_group">
+  <div class="alert alert-danger" role="alert" id="alertd">В этот день данный доктор занят, выберите другую дату пожалуйста</div>
+  <span id="tg1" data-time="1" class="label label-default">09:00</span>
+  <span id="tg2" data-time="2" class="label label-default">10:00</span>
+  <span id="tg4" data-time="4" class="label label-default">11:00</span>
+  <span id="tg8" data-time="8" class="label label-default">12:00</span>
+  <span id="tg16" data-time="16" class="label label-default">13:00</span>
+  <span id="tg32" data-time="32" class="label label-default">14:00</span>
+  <span id="tg64" data-time="64" class="label label-default">15:00</span>
+  <span id="tg128" data-time="128" class="label label-default">16:00</span>
+  <span id="tg256" data-time="256" class="label label-default">17:00</span>
+  </div>
+  {% buttons %}
+    <button type="submit" class="btn btn-primary">
+      {% bootstrap_icon "star" %} Submit
+    </button>
+  {% endbuttons %}
+</form>
+<script type="text/javascript">
+    busydates = {{busydates | safe}}
+    $('.datetimepicker').datepicker({
+        dateFormat: 'yy-mm-dd',
+        minDate:1,
+        beforeShowDay: $.datepicker.noWeekends,
+        onSelect: function(){
+        showTime();
+        }
+    });
+    $("#id_doctor").on("change", function(){
+	  showTime();
+    });
+    $("#time_group span").on("click", function(){
+	    $("#time_group span").removeClass("label-success");
+	    $(this).addClass("label-success")
+	    $("#id_time").val($(this).attr("data-time"))
+    });
+   function showTime(){
+	  var doc = $("#id_doctor").val()
+	  var date = $("#id_date").val()
+	  $("#time_group span").hide()
+	  $("#alertd").hide()
+	  
+	  $("button").removeAttr("disabled")
+	  if(doc && date){
+		$("#time_group span").removeClass("label-success"); 
+		$("#time_group span").show()
+		var i = 256
+		var ext = 8
+		var dt = busydates[date+doc];
+		if(dt==511){
+			$("#alertd").show()
+			$("button").attr("disabled", "disabled")
+		}
+		if(dt){
+			while(i>0){
+				
+				if(dt>=i){
+				
+					$("#tg"+i).hide();
+					dt = dt - i
+				}
+				ext--
+				
+				i = Math.pow(2,ext)
+				
+			}
+		}
+		$($("#time_group span:visible").eq(0)).addClass("label-success")
+		$("#id_time").val($($("#time_group span:visible").eq(0)).attr("data-time"));
+	  }
+   }
+    
+</script>
+</body>
+
+</html>
